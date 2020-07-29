@@ -1,0 +1,27 @@
+{
+  "name": "simple-chess-tunnel",
+  "version": "0.1.0",
+  "description": "A simple chess game tunnel",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/loloof64/SimpleChessTunnel.git"
+  },
+  "keywords": [
+    "chess",
+    "tunnel"
+  ],
+  "author": "Laurent Bernabe <laurent.bernabe@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/loloof64/SimpleChessTunnel/issues"
+  },
+  "homepage": "https://github.com/loloof64/SimpleChessTunnel#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "redis": "^3.0.2"
+  }
+}
