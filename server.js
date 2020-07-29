@@ -1,70 +1,92 @@
 const express = require("express");
 const app = express();
-const client = require("redis").createClient();
+const MongoClient = require("mongodb").MongoClient;
 
 const PORT = 3000;
+const DATABASE_URL = "mongodb://localhost:27017";
+const DATABASE_NAME = "simplechesstunnel";
 
-client.on("error", function (err) {
-  console.log("Error " + err);
+let db;
+
+MongoClient.connect(DATABASE_URL, function (err, client) {
+  if (err) throw err;
+
+  db = client.db(DATABASE_NAME);
 });
 
-function generateId() {
-  const elementsSet = "0123456789abcdefghijklmnopqrstuvwxyz";
-  const idSize = 10;
-  let id = "";
-  for (let i = 0; i < idSize; i++) {
-    let index = Math.floor(Math.random() * elementsSet.length);
-    let currentElement = elementsSet.charAt(index);
-    id += currentElement;
+app.post("/users", function (req, res) {
+  if (!db) {
+    res.send("#Cannot access database.");
+    return;
   }
 
-  return id;
-}
-
-app.post("/users", function (req, res) {
-  client.hgetall("users", function (err, users) {
-    if (err) {
-      res.send("#Error getting users.");
-    } else {
-      res.send(Object.keys(users));
-    }
-  });
+  db.collection("users")
+    .find()
+    .toArray(function (err, result) {
+      if (err) {
+        res.send("#Cannot access users data.");
+        return;
+      } else {
+        res.send(result);
+        return;
+      }
+    });
 });
 
 app.post("/users/register/:name", function (req, res) {
+  if (!db) {
+    res.send("#Cannot access database.");
+    return;
+  }
+
   const name = req.params.name;
-  const id = generateId();
+  const data = {
+    name,
+  };
+  const filter = { name: { $eq: name } };
 
-  client.hexists("users", id, function (err, exists) {
-    if (err) {
-      res.send("#Could not check if user id is already used.");
+  db.collection("users").countDocuments(filter, function (error, result) {
+    if (error) {
+      res.send("#Error when searching for already existing name : " + error);
       return;
-    }
-    if (exists) {
-      res.send("#User id is already used.");
-      return;
-    }
-  });
-
-  client.hset("users", id, name, function (err) {
-    if (err) {
-      res.send("#Error trying to register user.");
     } else {
-      res.send(id);
+      if (result > 0) {
+        res.send("#Name is already taken currently");
+        return;
+      } else {
+        db.collection("users").insertOne(data, function (error) {
+          if (error) {
+            res.send("#Error registering the user : " + error);
+            return;
+          } else {
+            res.send("Success");
+            return;
+          }
+        });
+      }
     }
   });
 });
 
-app.post("/users/disconnect/:id", function (req, res) {
-  const id = req.params.id;
-  client.hdel("users", id, function (err, isRemoved) {
-    if (err) {
-      res.send("#Error trying to disconnect user.");
+app.post("/users/disconnect/:name", function (req, res) {
+  if (!db) {
+    res.send("#Cannot access database.");
+  }
+
+  const name = req.params.name;
+  const filter = { name: { $eq: name } };
+
+  db.collection("users").deleteOne(filter, function (error, result) {
+    if (error) {
+      res.send("#Error deleting the user : " + error);
+      return;
     } else {
-      if (isRemoved) {
-        res.send("Done disconnecting user.");
+      if (result.result.ok && result.result.n == 1) {
+        res.send("Success");
+        return;
       } else {
-        res.send("#It is not a registered user.");
+        res.send("Not a registered user");
+        return;
       }
     }
   });
