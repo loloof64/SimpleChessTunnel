@@ -1,3 +1,5 @@
+const generateId = require("./utils").generateId;
+
 function setupGameRequestFeatures(app, db) {
   app.post("/game/new", function (req, res) {
     if ([null, undefined].includes(req.body)) {
@@ -24,7 +26,7 @@ function setupGameRequestFeatures(app, db) {
 
     // Checking that emitter is a registered user
 
-    filter = { serverId: { $eq: emitterId } };
+    filter = { ownId: { $eq: emitterId } };
     db.collection("users").findOne(filter, function (error, result) {
       if (error) {
         res
@@ -55,12 +57,14 @@ function setupGameRequestFeatures(app, db) {
             return;
           } else {
             // Creating the request
-            const recipientId = result.serverId;
+            const recipientId = result.ownId;
             const recipientShouldHaveWhite = ![true, "true"].includes(
               emitterShouldHaveWhite
             );
+            const ownId = generateId();
             const date = Date.now();
             document = {
+              ownId,
               emitterId,
               emitterName,
               recipientId,
@@ -77,6 +81,7 @@ function setupGameRequestFeatures(app, db) {
               } else {
                 const resultObj = result.ops[0];
                 const responseObj = {
+                  ownId: resultObj.ownId,
                   emitterName: resultObj.emitterName,
                   recipientName: resultObj.recipientName,
                   recipientShouldHaveWhite: resultObj.recipientShouldHaveWhite,
@@ -99,9 +104,9 @@ function setupGameRequestFeatures(app, db) {
       return;
     }
 
-    const { serverId } = req.body;
+    const { ownId } = req.body;
 
-    if ([serverId].includes(undefined)) {
+    if ([ownId].includes(undefined)) {
       res
         .status(422)
         .send("You forgot to provide a value in the request body.");
@@ -111,24 +116,27 @@ function setupGameRequestFeatures(app, db) {
     let filter;
 
     // Checking that user exists
-    filter = { serverId: { $eq: serverId } };
+    filter = { ownId: { $eq: ownId } };
     db.collection("users").findOne(filter, function (error, result) {
       if (error) {
         res.status(500).send("Error while trying to check that user exists");
       } else {
-        // Getting requests
-        filter = { recipientId: { $eq: serverId } };
-        db
-          .collection("pendingrequests")
-          .find(filter)
-          .toArray(function (err, result) {
-            if (err) {
-              res.status(500).send("Error while reading results");
-              return;
-            } else {
-              res.send(result);
-            }
-          });
+        if ([null, undefined].includes(result)) {
+            res.status(422).send("The requested user is not registered.");
+        } else {
+          // Getting requests
+          filter = { recipientId: { $eq: ownId } };
+          db.collection("pendingrequests")
+            .find(filter)
+            .toArray(function (err, result) {
+              if (err) {
+                res.status(500).send("Error while reading results");
+                return;
+              } else {
+                res.send(result);
+              }
+            });
+        }
       }
     });
   });
