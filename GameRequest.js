@@ -10,6 +10,7 @@ function setupGameRequestFeatures(app, db) {
       res
         .status(422)
         .send("You forgot to provide a value in the request body.");
+        return;
     }
 
     let filter, document;
