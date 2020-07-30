@@ -17,7 +17,7 @@ function setupGameSessionFeatures(app, db) {
       return;
     }
 
-    let filter;
+    let filter, document;
     filter = { ownId: { $eq: gameId } };
 
     db.collection("pendingrequests").findOne(filter, function (error, result) {
@@ -53,7 +53,34 @@ function setupGameSessionFeatures(app, db) {
             return;
           }
           else {
-              res.send("Starting game "+gameId);
+              const ownId = generateId();
+              let whiteId, blackId;
+              if (["true", true].includes(gameData.recipientShouldHaveWhite))
+              {
+                  whiteId = gameData.recipientId;
+                  blackId = gameData.emitterId;
+              }
+              else {
+                  whiteId = gameData.emitterId;
+                  blackId = gameData.recipientId;
+              }
+              const status = "InProgress";
+              const startDate = Date.now();
+              document = {
+                ownId,
+                whiteId,
+                blackId,
+                status,
+                startDate,
+              };
+              db.collection("gamesessions").insertOne(document, function(error, result) {
+                    if (error) {
+                        res.status(500).send("Error while trying to create game session.");
+                    }
+                    else {
+                        res.send(result.ops[0]);
+                    }
+              });
           }
         });
       }
