@@ -1,6 +1,7 @@
 const express = require("express");
 const { setUpConnectionFeatures } = require("./UserConnection");
 const { setupGameRequestFeatures } = require("./GameRequest");
+const { setupGameSessionFeatures } = require("./GameSession");
 const app = express();
 const MongoClient = require("mongodb").MongoClient;
 
@@ -20,6 +21,7 @@ MongoClient.connect(DATABASE_URL, function (err, client) {
   db = client.db(DATABASE_NAME);
   setUpConnectionFeatures(app, db);
   setupGameRequestFeatures(app, db);
+  setupGameSessionFeatures(app, db);
 });
 
 app.listen(PORT, function () {
