@@ -1,4 +1,5 @@
 const generateId = require("./utils").generateId;
+const {startPosition} = require('./chessLogic');
 
 function setupGameSessionFeatures(app, db) {
   app.post("/game/accept", function (req, res) {
@@ -66,12 +67,16 @@ function setupGameSessionFeatures(app, db) {
               }
               const status = "InProgress";
               const startDate = Date.now();
+              const history = [];
+              const currentPosition = startPosition();
               document = {
                 ownId,
                 whiteId,
                 blackId,
                 status,
                 startDate,
+                history,
+                currentPosition,
               };
               db.collection("gamesessions").insertOne(document, function(error, result) {
                     if (error) {

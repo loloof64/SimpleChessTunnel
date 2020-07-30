@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/loloof64/SimpleChessTunnel#readme",
   "dependencies": {
+    "chess.js": "^0.11.0",
     "express": "^4.17.1",
     "mongodb": "^3.5.9"
   }
