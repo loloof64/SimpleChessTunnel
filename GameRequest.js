@@ -135,6 +135,7 @@ function setupGameRequestFeatures(app, db) {
               } else {
                 const filteredResult = result.map(function(current) {
                   return {
+                    ownId: current.ownId,
                     emitterName: current.emitterName,
                     recipientShouldHaveWhite: current.recipientShouldHaveWhite,
                     date: current.date,
