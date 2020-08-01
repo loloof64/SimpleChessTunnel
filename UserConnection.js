@@ -1,7 +1,7 @@
 const generateId = require("./utils").generateId;
 
 function setUpConnectionFeatures(app, db) {
-  app.post("/users", function (req, res) {
+  app.post("/users/names", function (req, res) {
     db.collection("users")
       .find()
       .toArray(function (err, result) {
@@ -9,7 +9,12 @@ function setUpConnectionFeatures(app, db) {
           res.status(500).send("Cannot access users data.");
           return;
         } else {
-          res.send(result);
+          const filteredResult = result.map(function(current) {
+            return {
+              name: current.name
+            }
+          });
+          res.send(filteredResult);
           return;
         }
       });
