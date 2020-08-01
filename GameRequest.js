@@ -133,13 +133,24 @@ function setupGameRequestFeatures(app, db) {
                 res.status(500).send("Error while reading results");
                 return;
               } else {
-                res.send(result);
+                const filteredResult = result.map(function(current) {
+                  return {
+                    emitterName: current.emitterName,
+                    recipientShouldHaveWhite: current.recipientShouldHaveWhite,
+                    date: current.date,
+                  }
+                });
+                res.send(filteredResult);
               }
             });
         }
       }
     });
   });
+
+  app.post('/request/cancel', function (req ,res) {
+
+  })
 }
 
 module.exports = {
