@@ -1,7 +1,7 @@
 const generateId = require("./utils").generateId;
 
 function setupGameRequestFeatures(app, db) {
-  app.post("/game/new", function (req, res) {
+  app.post("/games/new", function (req, res) {
     if ([null, undefined].includes(req.body)) {
       res
         .status(422)

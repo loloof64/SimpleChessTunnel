@@ -2,7 +2,7 @@ const generateId = require("./utils").generateId;
 const { startPosition, isWhiteTurn, doMove } = require("./chessLogic");
 
 function setupGameSessionFeatures(app, db) {
-  app.post("/game/accept", function (req, res) {
+  app.post("/games/accept", function (req, res) {
     if ([null, undefined].includes(req.body)) {
       res
         .status(422)
@@ -93,7 +93,7 @@ function setupGameSessionFeatures(app, db) {
     });
   });
 
-  app.post("/game/move", function (req, res) {
+  app.post("/games/move", function (req, res) {
     if ([null, undefined].includes(req.body)) {
       res
         .status(422)
@@ -196,6 +196,7 @@ function setupGameSessionFeatures(app, db) {
               document.history.push(moveToCommit.moveSan);
               document.currentPosition = moveToCommit.position;
               document.status = moveToCommit.status;
+              document.lastMoveDate = Date.now();
 
               db.collection("gamesessions").updateOne(
                 filter,
@@ -223,6 +224,23 @@ function setupGameSessionFeatures(app, db) {
         }
       }
     });
+  });
+
+  app.post("/games/clean", function (req, res) {
+    const oldDateLimit = Date.now() - 1000 * 60 * 15;
+    db.collection("gamesessions").deleteMany(
+        {
+          lastMoveDate: { $lt: oldDateLimit },
+          status: { $eq : "Ended" }
+        },
+        function(error, result) {
+          if (error) {
+            res.status(500).send("Failed to clean up old games.");
+            return;
+          }
+          res.send("Old games clean up success.")
+        }
+    );
   });
 }
 
